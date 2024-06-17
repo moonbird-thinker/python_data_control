@@ -1,0 +1,35 @@
+function sendEmail() {
+  // var quotaLeft = MailApp.getRemainingDailyQuota();
+  // Logger.log(quotaLeft);
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const sheet1 = ss.getSheetByName('list'); // 이메일 보낼 사람들 목록이 들어간 시트명!
+  const sheet2 = ss.getSheetByName('template'); // 이메일 내용이 들어간 시트명!
+  const subject = sheet2.getRange(2,1).getValue(); // 이메일 제목 추출
+  const n = sheet1.getLastRow(); // 이메일 보낼 명단이 전체 몇 명인지 확인
+  
+  // 2번째 행부터 이메일 주소가 있기때문에 2번째 행부터 시작해서 마지막 줄까지 반복하는 구문
+  for (let i = 2; i < n+1 ; i++ ) {
+    if (MailApp.getRemainingDailyQuota() <= 0) {
+      Logger.log("하루 보낼 수 있는 용량을 초과하여 메일을 송부할 수 없습니다.");
+      break;
+    } else {
+      Logger.log(i -1 + ", 번째 메일 전송을 (시작) 하였습니다.");
+    }
+    // 이메일 주소는 2번째 열에 있으니까 (i,2)
+    const emailAddress = sheet1.getRange(i,2).getValue(); 
+    // 이름은 첫번째 열에 있으니까!! (i, 1)
+    const name = sheet1.getRange(i,1).getValue();
+    
+    // 이메일 내용이 될부분 추출
+    let message = sheet2.getRange(2,2).getValue();
+    // <name> 이라고 써진 부분을 실제 이름으로 갈아치우는 코드!
+    message = message.replace("<name>",name).replace(" ", "");
+
+    // 메일 가랏!
+    MailApp.sendEmail(emailAddress, subject, message);
+    Utilities.sleep(500);
+    Logger.log(i -1 + ", 번째 메일 전송을 (완료) 하였습니다 [" + name + "]");
+    Logger.log("하루 송부 가능한 메일 - 남은 메일: " + MailApp.getRemainingDailyQuota())
+  }
+}
